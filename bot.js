@@ -2,18 +2,20 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const config = require('./JSON/config.json');
 
-// use firebase
+// set firebase
 const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, getDocs } = require('firebase/firestore');
+const { getDatabase, ref, set, onValue, get, child } = require("firebase/database");
 const firebaseConfig = config.firebaseConfig;
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const firebase = initializeApp(firebaseConfig);
+const db = getDatabase(firebase);
 
 //持續執行方法
 let nowDoFunction = false;
 let DoingCount = 0;
 let DoUserID = '';
 let DoData = undefined;
+
+// 設定時間
 let date = false;
 
 // bot 上線
@@ -21,6 +23,14 @@ client.login(config.discord_auth.key);
 client.on('ready', () => {
   console.info(`${client.user.tag} login.`);
 });
+
+// ------------- firebase 操作 -------------
+
+// 覆蓋 db 資料
+// 參數 path/路徑 、 data/要寫入的資料
+function db_set_data(path, data) {
+  set(ref(db, path), data);
+}
 
 const ownerID = [
   {
