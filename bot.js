@@ -106,22 +106,17 @@ client.on('message', msg => {
           console.info('ShibaHlepMeError', err);
         }
         break;
-      case '下班時間': // 查訊下班時間
-        console.log('查詢下班時間')
-        console.log(ownerID, msg.author.id);
-        const targetIndex = ownerID.findIndex( item => {
-          return item.id === msg.author.id;
-        })
-        let alert = ''
-        if (targetIndex > -1) {
-          getRightTime();
-          alert = calcTime(date, formatTargetTime(ownerID[targetIndex].time));
-        }else{
-          alert = '看起來你還沒有設定下班時間哦'
-        }
-        msg.reply(alert);
+      case '下班時間': // 查訊 距離下班剩餘時間
+        cmd_offDuty();
         break;
-      case '下班時間列表': // 列表式查看目前的資料
+      case '下班': // 查訊 距離下班剩餘時間
+        cmd_offDuty();
+        break;
+      case '午休': // 查訊 距離午休剩餘時間
+        getRightTime();
+        msg.reply( calcTime('午休', date, formatTargetTime('12:00')) );
+        break;
+      case 'list': // 列表式查看目前的資料
         const embed = new Discord.MessageEmbed()
           .setColor('#0099ff')
           .setTitle('列表')
@@ -152,6 +147,26 @@ client.on('message', msg => {
     }
   } catch (err) {
     console.info('OnMessageError', err);
+  }
+
+  // 查詢 下班剩餘時間
+  function cmd_offDuty(){
+    return onValue(ref(db, 'off-duty-time'), (snapshot) => {
+      const offDutyList = snapshot.val();
+      let alert = ''
+      const targetIndex = offDutyList.findIndex(item => {
+        return item.id === msg.author.id;
+      })
+      if (targetIndex > -1) {
+        getRightTime();
+        alert = calcTime('下班', date, formatTargetTime(ownerID[targetIndex].time));
+      } else {
+        alert = '看起來你還沒有設定下班時間哦'
+      }
+      msg.reply(alert);
+    }, {
+      onlyOnce: true
+    });
   }
 
   // 社畜柴柴幫幫我
@@ -197,7 +212,14 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content); // 下班時間
-          msg.channel.send(`申請資料如下：\n設定者 <@${msg.author.id}>\n下班時間 - ${DoData[0]}\n\n正確 Y / 錯誤 N`);
+          msg.channel.send(`
+              申請資料如下：\n
+              設定者 <@${msg.author.id}>\n
+              下班時間 - ${DoData[0]}
+              \n
+              \n
+              正確 Y / 錯誤 N
+          `);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
@@ -263,23 +285,38 @@ client.on('message', msg => {
   }
 
   // 計算下班剩餘時間
-  function calcTime(now, target) {
+  function calcTime(type, now, target) {
     const diff = (timeToString(target) - timeToString(now))
     // 無條件捨去，1000(毫秒) 60(秒) 60(分)
     let hour = Math.trunc(diff / 1000 / 60 / 60);
     let min = Math.trunc(diff / 1000 / 60 - hour * 60);
-    return alertText(hour, min);
+    return alertText(type, hour, min);
   }
 
-  function alertText(hour, min) {
-    if (hour >= 2) {
-      return `社畜還想下班啊！離下班還有 ${hour}小時 ${min}分 呢！`;
-    } else if (hour >= 1) {
-      return `離下班只剩 ${hour}小時 ${min}分 哦，加油吧社畜！`;
-    } else if(hour === 0 && min > 0){
-      return `你好像很努力哦，剩下最後的 ${min}分 就下班了呢`
-    } else {
-      return `社畜你今天已經解脫啦！還是你很想工作啊？想上班我成全你啊`
+  function alertText(type, hour, min) {
+    switch (type){
+      case '午休':
+      if (hour >= 1) {
+        return `離午休還有 ${hour}小時 ${min}分 呢！484太早問了啊？`;
+      } else if (hour === 0 && min > 0) {
+        return `同志，離午休只差 ${hour}小時 ${min}分 ，再堅持一下！`;
+      } else if (hour <= -1) {
+        return `午休已經過啦，醒醒面對工作吧社畜！`
+      } else {
+        return `已經在午休了不是？當本柴不用午休的嗎？`
+      }
+      break;
+      case '下班':
+        if (hour >= 2) {
+          return `社畜還想下班啊！離下班還有 ${hour}小時 ${min}分 呢！`;
+        } else if (hour >= 1) {
+          return `離下班只剩 ${hour}小時 ${min}分 哦，加油吧社畜！`;
+        } else if (hour === 0 && min > 0) {
+          return `你好像很努力哦，剩下最後的 ${min}分 就下班了呢`
+        } else {
+          return `社畜你今天已經解脫啦！還是你很想工作？這麼想上班我可以成全你啊`
+        }
+      break;
     }
   }
 
