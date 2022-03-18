@@ -304,7 +304,7 @@ client.on('message', msg => {
     let cat1 = "　 ∧＿∧";
     let cat2 = "　(`･ω･∥";
     let cat3 = "　丶　つ０";
-    let cat4 = "　 しーＪ'";
+    let cat4 = "　 しーＪ";
     if(answer.length === 1){
       flag3 = `　　   ∥   ${answer}  |`;
     } else if (answer.length === 2) {
