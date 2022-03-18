@@ -285,7 +285,7 @@ client.on('message', msg => {
 
   // 柴運勢
   function Omikuji(msg) {
-    const fortune = ['大吉', '大兇', '中吉', '中兇', '小吉', '小兇', '末吉', '沒吉', '沒兇', '吉', '兇', '柴約：不可說', '施主這個問題你還是別深究了吧'];
+    const fortune = ['大吉', '大兇', '中吉', '中兇', '小吉', '小兇', '末吉', '沒吉', '沒兇', '吉', '兇', '柴曰：不可說', '施主這個問題你還是別深究了吧'];
     let answer = fortune[getRandom(fortune.length)];
     // let emoticon = ''; // 顏文字
     // if (answer.indexOf('吉') > 0){
