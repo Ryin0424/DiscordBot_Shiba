@@ -67,8 +67,7 @@ client.on('message', msg => {
   try {
     const cmd = msg.content;
     // FIXME:
-    console.log('user', DoUserID);
-    console.log(cmd ,msg.author.id);
+    // console.log(cmd, msg.author.id);
     // console.log(msg);
 
     if (nowDoFunction){
@@ -127,6 +126,10 @@ client.on('message', msg => {
           let minutes = (date.getMinutes() < 10) ? `0${date.getMinutes()}` : date.getMinutes();
 
           msg.channel.send(`${hour}:${minutes}`);
+          break;
+      // 娛樂功能
+      case '柴運勢':
+          Omikuji(msg);
           break;
       case '柴猜拳':
           nowDoFunction = doMora;
@@ -280,6 +283,46 @@ client.on('message', msg => {
     return Math.floor(Math.random() * x);
   }
 
+  // 柴運勢
+  function Omikuji(msg) {
+    const fortune = ['大吉', '大兇', '中吉', '中兇', '小吉', '小兇', '末吉', '沒吉', '沒兇', '吉', '兇', '柴約：不可說', '施主這個問題你還是別深究了吧'];
+    let answer = fortune[getRandom(fortune.length)];
+    // let emoticon = ''; // 顏文字
+    // if (answer.indexOf('吉') > 0){
+    //   emoticon = 'ヽ(●´∀`●)ﾉ';
+    // } else if (answer.indexOf('兇') > 0) {
+    //   emoticon = '(›´ω`‹ )';
+    // } else {
+    //   emoticon = '';
+    // }
+    // msg.reply(`\n今日運勢： ${answer}`);
+    let codeArea = '```';
+    let flag1 = "        ○ ＿＿＿＿";
+    let flag2 = "　　　   ∥　　　　|";
+    let flag3 = "　　　   ∥ 放不下 |";
+    let flag4 = "　　　   ∥￣￣￣￣";
+    let cat1 = "　 ∧＿∧";
+    let cat2 = "　(`･ω･∥";
+    let cat3 = "　丶　つ０";
+    let cat4 = "　 しーＪ'";
+    if(answer.length === 1){
+      flag3 = `　　　   ∥   ${answer}  |`;
+    } else if (answer.length === 2) {
+      flag3 = `　　　   ∥  ${answer} |`;
+    }
+    let text = (answer.length > 2) ? answer : '';
+    msg.reply(`${text}${codeArea}
+    ${flag1}
+    ${flag2}
+    ${flag3}
+    ${flag2}
+    ${flag4}
+    ${cat1}
+    ${cat2}
+    ${cat3}
+    ${cat4}${codeArea}`)
+  }
+
   // 柴猜拳
   function doMora(msg) {
     if (msg.author.id === DoUserID){
@@ -340,6 +383,15 @@ client.on('message', msg => {
           break;
     }
     CloseAllDoingFunction();
+  }
+
+  // 確認權限
+  // userRole 使用者擁有的身份組ID
+  // targetRole 確認是否擁有的身份組ID
+  function checkRoles(userRole, targetRole){
+    return userRole.some((el) => {
+      return el === targetRole;
+    })
   }
 
   // 結束所有續行
