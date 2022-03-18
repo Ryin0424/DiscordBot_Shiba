@@ -131,7 +131,7 @@ client.on('message', msg => {
       case '柴猜拳':
           nowDoFunction = doMora;
           DoUserID = msg.author.id;
-          msg.channel.send('一決勝負吧！');
+          msg.reply('一決勝負吧！');
           break;
       // default: //身份組ID
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
@@ -282,31 +282,35 @@ client.on('message', msg => {
 
   // 柴猜拳
   function doMora(msg) {
-    const mora = ['剪刀', '石頭', '布'];
-    const botMora = mora[getRandom(3)];
-    try {
-      switch (DoingCount) {
-        case 0:
-          if (msg.content !== '剪刀' && msg.content !== '石頭' && msg.content !== '布'){
-            msg.channel.send(`欸，我看不懂你在出什麼啦～`)
-            DoingCount --;
-          }else{
-            msg.channel.send(`我出「${botMora}」！`)
-            if (botMora === msg.content){
-              msg.channel.send(`哎呀，看來我們不分勝負呢～`);
-              msg.channel.send(`再來！`);
+    if (msg.author.id === DoUserID){
+      const mora = ['剪刀', '石頭', '布'];
+      const botMora = mora[getRandom(3)];
+      try {
+        switch (DoingCount) {
+          case 0:
+            if (msg.content !== '剪刀' && msg.content !== '石頭' && msg.content !== '布'){
+              msg.channel.send(`欸，我看不懂你在出什麼啦～`)
               DoingCount --;
-            } else { // 分出勝負
-              moraWinner(botMora, msg.content);
+            }else{
+              msg.channel.send(`我出「${botMora}」！`)
+              if (botMora === msg.content){
+                msg.channel.send(`哎呀，看來我們不分勝負呢～`);
+                msg.channel.send(`再來！`);
+                DoingCount --;
+              } else { // 分出勝負
+                moraWinner(botMora, msg.content);
+              }
             }
-          }
-          break;
+            break;
+        }
+        if (DoUserID !== '') DoingCount++;
+      } catch (err) {
+        CloseAllDoingFunction();
+        client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
+        console.error('moraError', err);
       }
-      if (DoUserID !== '') DoingCount++;
-    } catch (err) {
-      CloseAllDoingFunction();
-      client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.error('moraError', err);
+    } else {
+      msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
     }
   }
 
