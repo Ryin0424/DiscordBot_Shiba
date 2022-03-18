@@ -297,18 +297,18 @@ client.on('message', msg => {
     // }
     // msg.reply(`\n今日運勢： ${answer}`);
     let codeArea = '```';
-    let flag1 = "        ○ ＿＿＿＿";
-    let flag2 = "　　　   ∥　　　　|";
-    let flag3 = "　　　   ∥ 放不下 |";
-    let flag4 = "　　　   ∥￣￣￣￣";
+    let flag1 = "　　   ○ ＿＿＿＿";
+    let flag2 = "　　   ∥　　　　|";
+    let flag3 = "　　   ∥ 放不下 |";
+    let flag4 = "　　   ∥￣￣￣￣";
     let cat1 = "　 ∧＿∧";
     let cat2 = "　(`･ω･∥";
     let cat3 = "　丶　つ０";
     let cat4 = "　 しーＪ'";
     if(answer.length === 1){
-      flag3 = `　　　   ∥   ${answer}  |`;
+      flag3 = `　　   ∥   ${answer}  |`;
     } else if (answer.length === 2) {
-      flag3 = `　　　   ∥  ${answer} |`;
+      flag3 = `　　   ∥  ${answer} |`;
     }
     let text = (answer.length > 2) ? answer : '';
     msg.reply(`${text}${codeArea}
