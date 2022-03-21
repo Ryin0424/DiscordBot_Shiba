@@ -1,7 +1,6 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const auth = require('./JSON/auth.json');
-const prefix = require('./JSON/prefix.json');
+const config = require('./JSON/config.json');
 
 //持續執行方法
 let nowDoFunction = false;
@@ -11,7 +10,7 @@ let DoData = undefined;
 let date = false;
 
 // bot 上線
-client.login(auth.key);
+client.login(config.discord_auth.key);
 client.on('ready', () => {
   console.info(`${client.user.tag} login.`);
 });
