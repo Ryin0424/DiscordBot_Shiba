@@ -70,7 +70,7 @@ client.on('message', msg => {
     if(msg.member.user.bot) return; // 消息由機器人發送，不回應
   }
   catch(error){
-    console.info(error);
+    console.error(error);
     return;
   }
 
@@ -83,8 +83,7 @@ client.on('message', msg => {
   try {
     const cmd = msg.content;
     // FIXME:
-    console.log('user', DoUserID);
-    console.log(cmd ,msg.author.id);
+    // console.log(cmd, msg.author.id);
     // console.log(msg);
 
     if (nowDoFunction){
@@ -92,61 +91,84 @@ client.on('message', msg => {
     }
     switch (cmd) {
       case '社畜柴柴幫幫我': // 設定功能
-        try {
-          if (DoUserID === '') {
-            msg.channel.send('汪嗚～有什麼我能效勞的嗎？');
-            DoUserID = msg.author.id;
-            nowDoFunction = ShibaHlepMe;
-          } else {
-            console.log('插話仔', msg.author.id);
-            angry.push(msg.author.id);
-            msg.channel.send('有其他人正在使用中，請稍等');
+          try {
+            if (DoUserID === '') {
+              msg.channel.send('汪嗚～有什麼我能效勞的嗎？');
+              DoUserID = msg.author.id;
+              nowDoFunction = ShibaHlepMe;
+            } else {
+              console.log('插話仔', msg.author.id);
+              angry.push(msg.author.id);
+              msg.channel.send('有其他人正在使用中，請稍等');
+            }
+          } catch (err) {
+            console.error('ShibaHlepMeError', err);
           }
-        } catch (err) {
-          console.info('ShibaHlepMeError', err);
-        }
-        break;
+          break;
       case '下班時間': // 查訊 距離下班剩餘時間
-        cmd_offDuty();
-        break;
+          offDuty();
+          break;
       case '下班': // 查訊 距離下班剩餘時間
-        cmd_offDuty();
-        break;
+          offDuty();
+          break;
       case '午休': // 查訊 距離午休剩餘時間
-        getRightTime();
-        msg.reply( calcTime('午休', date, formatTargetTime('12:00')) );
-        break;
-      case 'list': // 列表式查看目前的資料
-        const embed = new Discord.MessageEmbed()
-          .setColor('#0099ff')
-          .setTitle('列表')
-          // .setURL('https://discord.js.org/')
-          .setAuthor('社畜的忠實好朋友 - 社畜柴柴', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org')
-          .setDescription('測試除錯用的啦')
-          // .setThumbnail('https://i.imgur.com/wSTFkRM.png')
-          .addField('\u200B', '\u200B')
-          // .setImage('https://i.imgur.com/wSTFkRM.png')
-          // .setTimestamp()
-          for(let i in ownerID){
-            let item = ownerID[i];
-            embed.addField(item.username, item.time, true)
-          }
-          // .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png');
-        msg.channel.send(embed);
-        break;
+          getRightTime();
+          msg.reply(calcTime( '午休', date, formatTargetTime('12:00')));
+          break;
+      case '下班時間列表': // 列表式查看目前的資料
+          const embed = new Discord.MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('列表')
+            // .setURL('https://discord.js.org/')
+            .setAuthor('社畜的忠實好朋友 - 社畜柴柴', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org')
+            .setDescription('測試除錯用的啦')
+            // .setThumbnail('https://i.imgur.com/wSTFkRM.png')
+            .addField('\u200B', '\u200B')
+            // .setImage('https://i.imgur.com/wSTFkRM.png')
+            // .setTimestamp()
+            for(let i in ownerID){
+              let item = ownerID[i];
+              embed.addField(item.username, item.time, true)
+            }
+            // .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png');
+          msg.channel.send(embed);
+          break;
       case '現在幾點':
-        getRightTime();
-        let hour = (date.getUTCHours() + 8 < 10) ? `0${date.getUTCHours()+8}` : date.getUTCHours()+8;
-        let minutes = (date.getMinutes() < 10) ? `0${date.getMinutes()}` : date.getMinutes();
-
-        msg.channel.send(`${hour}:${minutes}`);
-        break;
+          getRightTime();
+          let hour = (date.getUTCHours() + 8 < 10) ? `0${date.getUTCHours()+8}` : date.getUTCHours()+8;
+          let minutes = (date.getMinutes() < 10) ? `0${date.getMinutes()}` : date.getMinutes();
+          msg.channel.send(`${hour}:${minutes}`);
+          break;
+      // 娛樂功能
+      case '柴運勢':
+          Omikuji(msg);
+          break;
+      case '柴猜拳':
+          nowDoFunction = doMora;
+          DoUserID = msg.author.id;
+          msg.reply('一決勝負吧！');
+          break;
       // default: //身份組ID
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
       //   break;
     }
   } catch (err) {
-    console.info('OnMessageError', err);
+    console.error('OnMessageError', err);
+  }
+
+  // 查詢下班時間
+  function offDuty(){
+    const targetIndex = ownerID.findIndex(item => {
+      return item.id === msg.author.id;
+    })
+    let alert = ''
+    if (targetIndex > -1) {
+      getRightTime();
+      alert = calcTime('下班', date, formatTargetTime(ownerID[targetIndex].time));
+    } else {
+      alert = '看起來你還沒有設定下班時間哦'
+    }
+    msg.reply(alert);
   }
 
   // 查詢 下班剩餘時間
@@ -195,7 +217,7 @@ client.on('message', msg => {
       }
     }
     catch(error){
-      console.log('ShibaError', error);
+      console.error('ShibaError', error);
     }
   }
 
@@ -271,7 +293,7 @@ client.on('message', msg => {
     } catch (err) {
       CloseAllDoingFunction();
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.info('addUserFunctionNowError', err);
+      console.error('addUserFunctionNowError', err);
     }
   }
   // 將輸入的訊息(下班時間)還原成系統能分析的格式 (ex: 2022-02-22 22:22)
@@ -294,18 +316,18 @@ client.on('message', msg => {
   }
 
   function alertText(type, hour, min) {
-    switch (type){
+    switch (type) {
       case '午休':
-      if (hour >= 1) {
-        return `離午休還有 ${hour}小時 ${min}分 呢！484太早問了啊？`;
-      } else if (hour === 0 && min > 0) {
-        return `同志，離午休只差 ${hour}小時 ${min}分 ，再堅持一下！`;
-      } else if (hour <= -1) {
-        return `午休已經過啦，醒醒面對工作吧社畜！`
-      } else {
-        return `已經在午休了不是？當本柴不用午休的嗎？`
-      }
-      break;
+        if (hour >= 1) {
+          return `離午休還有 ${hour}小時 ${min}分 呢！484太早問了啊？`;
+        } else if (hour === 0 && min > 0) {
+          return `同志，離午休只差 ${hour}小時 ${min}分 ，再堅持一下！`;
+        } else if (hour <= -1) {
+          return `午休已經過啦，醒醒面對工作吧社畜！`
+        } else {
+          return `已經在午休了不是？當本柴不用午休的嗎？`
+        }
+        break;
       case '下班':
         if (hour >= 2) {
           return `社畜還想下班啊！離下班還有 ${hour}小時 ${min}分 呢！`;
@@ -316,7 +338,7 @@ client.on('message', msg => {
         } else {
           return `社畜你今天已經解脫啦！還是你很想工作？這麼想上班我可以成全你啊`
         }
-      break;
+        break;
     }
   }
 
@@ -324,6 +346,115 @@ client.on('message', msg => {
     date = new Date();
   }
 
+  // 取得亂數
+  // example: x = 3，則得到 0~3(不含3)之間的亂數 (0.1.2)
+  function getRandom(x) {
+    return Math.floor(Math.random() * x);
+  }
+
+  // 柴運勢
+  function Omikuji(msg) {
+    const fortune = ['大吉', '大兇', '中吉', '中兇', '小吉', '小兇', '末吉', '沒吉', '沒兇', '吉', '兇', '柴曰：不可說', '施主這個問題你還是別深究了吧', '超吉', '究吉', '兇貴'];
+    let answer = fortune[getRandom(fortune.length)];
+    let codeArea = '```';
+    let flag1 = "　　   ○ ＿＿＿＿";
+    let flag2 = "　　   ∥　　　　|";
+    let flag3 = "　　   ∥ 看上面 |";
+    let flag4 = "　　   ∥￣￣￣￣";
+    let cat1 = "　 ∧＿∧";
+    let cat2 = "　(`･ω･∥";
+    let cat3 = "　丶　つ０";
+    let cat4 = "　 しーＪ";
+    if(answer.length === 1){
+      flag3 = `　　   ∥   ${answer}  |`;
+    } else if (answer.length === 2) {
+      flag3 = `　　   ∥  ${answer} |`;
+    }
+    let text = (answer.length > 2) ? answer : '';
+    msg.reply(`${text}${codeArea}
+    ${flag1}
+    ${flag2}
+    ${flag3}
+    ${flag2}
+    ${flag4}
+    ${cat1}
+    ${cat2}
+    ${cat3}
+    ${cat4}${codeArea}`)
+  }
+
+  // 柴猜拳
+  function doMora(msg) {
+    if (msg.author.id === DoUserID){
+      const mora = ['剪刀', '石頭', '布'];
+      const botMora = mora[getRandom(3)];
+      try {
+        switch (DoingCount) {
+          case 0:
+            if (msg.content !== '剪刀' && msg.content !== '石頭' && msg.content !== '布'){
+              msg.channel.send(`欸，我看不懂你在出什麼啦～`)
+              DoingCount --;
+            }else{
+              msg.channel.send(`我出「${botMora}」！`)
+              if (botMora === msg.content){
+                msg.channel.send(`哎呀，看來我們不分勝負呢～`);
+                msg.channel.send(`再來！`);
+                DoingCount --;
+              } else { // 分出勝負
+                moraWinner(botMora, msg.content);
+              }
+            }
+            break;
+        }
+        if (DoUserID !== '') DoingCount++;
+      } catch (err) {
+        CloseAllDoingFunction();
+        client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
+        console.error('moraError', err);
+      }
+    } else {
+      msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
+    }
+  }
+
+  // 判斷猜拳勝負
+  function moraWinner(bot, player){
+    switch (player){
+      case '剪刀':
+          if(bot === '布'){
+            msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+          } else{
+            msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+          }
+          break;
+      case '石頭':
+          if (bot === '剪刀') {
+            msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+          } else {
+            msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+          }
+          break;
+      case '布':
+          if (bot === '石頭') {
+            msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+          } else {
+            msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+          }
+          break;
+    }
+    CloseAllDoingFunction();
+  }
+
+  // 確認權限
+  // userRole 使用者擁有的身份組ID
+  // targetRole 確認是否擁有的身份組ID
+  function checkRoles(userRole, targetRole){
+    return userRole.some((el) => {
+      return el === targetRole;
+    })
+  }
+
+  // 結束所有續行
   function CloseAllDoingFunction(){
     nowDoFunction = false;
     DoingCount = 0;
