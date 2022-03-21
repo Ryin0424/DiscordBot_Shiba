@@ -71,15 +71,38 @@ client.on('message', msg => {
             console.error('ShibaHlepMeError', err);
           }
           break;
-      case '下班時間': // 查訊 距離下班剩餘時間
+      case '下班時間': // 查詢 距離下班剩餘時間
           offDuty();
           break;
-      case '下班': // 查訊 距離下班剩餘時間
+      case '下班': // 查詢 距離下班剩餘時間
           offDuty();
           break;
-      case '午休': // 查訊 距離午休剩餘時間
+      case '午休': // 查詢 距離午休剩餘時間
           getRightTime();
           msg.reply(calcTime( '午休', date, formatTargetTime('12:00')));
+          break;
+      case '指令': // 查詢 指令列表
+          const embed1 = new Discord.MessageEmbed()
+            .setColor('#6dca1c')
+            .setTitle('指令列表')
+            .setAuthor('社畜的忠實好朋友 - 社畜柴柴')
+            .addField('社畜柴柴幫幫我', '設定相關的開頭')
+            .addField('設定下班時間', '設定/修改時間', true)
+            .addField('支語舉報', '提供支語，報效國家', true)
+            .addField('沒事了', '結束設定', true)
+          const embed2 = new Discord.MessageEmbed()
+            .setColor('#9EC2E5')
+            .setTitle('查詢相關')
+            .addField('下班/下班時間', '查詢距離下班剩餘時間')
+            .addField('午休', '查詢距離午休剩餘時間')
+          const embed3 = new Discord.MessageEmbed()
+            .setColor('#F48B16')
+            .setTitle('娛樂相關')
+            .addField('柴運勢', '每日運勢')
+            .addField('柴猜拳', '猜拳勝負')
+          msg.channel.send(embed1);
+          msg.channel.send(embed2);
+          msg.channel.send(embed3);
           break;
       // case '下班時間列表': // 列表式查看目前的資料
       //     const embed = new Discord.MessageEmbed()
