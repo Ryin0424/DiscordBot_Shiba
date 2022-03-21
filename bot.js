@@ -5,10 +5,8 @@ const config = require('./JSON/config.json');
 // set firebase
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set, onValue, get, child } = require("firebase/database");
-const firebaseConfig = config.firebaseConfig;
-const firebase = initializeApp(firebaseConfig);
+const firebase = initializeApp(config.firebaseConfig);
 const db = getDatabase(firebase);
-
 //持續執行方法
 let nowDoFunction = false;
 let DoingCount = 0;
@@ -28,38 +26,9 @@ client.on('ready', () => {
 
 // 覆蓋 db 資料
 // 參數 path/路徑 、 data/要寫入的資料
-function db_set_data(path, data) {
-  set(ref(db, path), data);
+async function db_set_data(path, data) {
+  await set(ref(db, path), data);
 }
-
-const ownerID = [
-  {
-    id: '317268543626412032', // 我
-    username: '阿陰',
-    time: '18:00'
-  },
-  {
-    id: '401644473819332613', // 村
-    username: 'Saronven',
-    time: '17:30'
-  },
-  {
-    id: '339418235604697089', // ㄕㄩ
-    username: 'Gealach',
-    time: '17:00'
-  },
-  {
-    id: '393032833137901579', // 維
-    username: 'shengwei',
-    time: '22:00'
-  },
-  {
-    id: '357168893229269023', // 達
-    username: 'pogoo',
-    time: '18:00'
-  }
-]
-
 const angry = [];
 
 client.on('message', msg => {
@@ -82,9 +51,6 @@ client.on('message', msg => {
   // 訊息字串分析
   try {
     const cmd = msg.content;
-    // FIXME:
-    // console.log(cmd, msg.author.id);
-    // console.log(msg);
 
     if (nowDoFunction){
       nowDoFunction(msg);
@@ -97,8 +63,8 @@ client.on('message', msg => {
               DoUserID = msg.author.id;
               nowDoFunction = ShibaHlepMe;
             } else {
-              console.log('插話仔', msg.author.id);
-              angry.push(msg.author.id);
+              // 紀錄插話仔
+              recordInterruption();
               msg.channel.send('有其他人正在使用中，請稍等');
             }
           } catch (err) {
@@ -115,31 +81,25 @@ client.on('message', msg => {
           getRightTime();
           msg.reply(calcTime( '午休', date, formatTargetTime('12:00')));
           break;
-      case '下班時間列表': // 列表式查看目前的資料
-          const embed = new Discord.MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle('列表')
-            // .setURL('https://discord.js.org/')
-            .setAuthor('社畜的忠實好朋友 - 社畜柴柴', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org')
-            .setDescription('測試除錯用的啦')
-            // .setThumbnail('https://i.imgur.com/wSTFkRM.png')
-            .addField('\u200B', '\u200B')
-            // .setImage('https://i.imgur.com/wSTFkRM.png')
-            // .setTimestamp()
-            for(let i in ownerID){
-              let item = ownerID[i];
-              embed.addField(item.username, item.time, true)
-            }
-            // .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png');
-          msg.channel.send(embed);
-          break;
-      case '現在幾點':
-          getRightTime();
-          let hour = (date.getUTCHours() + 8 < 10) ? `0${date.getUTCHours()+8}` : date.getUTCHours()+8;
-          let minutes = (date.getMinutes() < 10) ? `0${date.getMinutes()}` : date.getMinutes();
-          msg.channel.send(`${hour}:${minutes}`);
-          break;
-      // 娛樂功能
+      // case '下班時間列表': // 列表式查看目前的資料
+      //     const embed = new Discord.MessageEmbed()
+      //       .setColor('#0099ff')
+      //       .setTitle('列表')
+      //       // .setURL('https://discord.js.org/')
+      //       .setAuthor('社畜的忠實好朋友 - 社畜柴柴', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org')
+      //       .setDescription('測試除錯用的啦')
+      //       // .setThumbnail('https://i.imgur.com/wSTFkRM.png')
+      //       .addField('\u200B', '\u200B')
+      //       // .setImage('https://i.imgur.com/wSTFkRM.png')
+      //       // .setTimestamp()
+      //       for(let i in ownerID){
+      //         let item = ownerID[i];
+      //         embed.addField(item.username, item.time, true)
+      //       }
+      //       // .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png');
+      //     msg.channel.send(embed);
+      //     break;
+      // 娛樂功能 ------
       case '柴運勢':
           Omikuji(msg);
           break;
@@ -152,27 +112,23 @@ client.on('message', msg => {
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
       //   break;
     }
+
+    // 支語警察
+    return onValue(ref(db, 'china-police'), (snapshot) => {
+      const chinaWord = snapshot.val();
+      let police = chinaWord.find(word => cmd.indexOf(word) > -1)
+      if (police !== undefined) msg.reply(`https://ect.incognitas.net/szh_police/${getRandom(10000)}.jpg \n支語警告`)
+      // msg.reply(alert);
+    }, {
+      onlyOnce: true
+    });
+
   } catch (err) {
     console.error('OnMessageError', err);
   }
 
   // 查詢下班時間
   function offDuty(){
-    const targetIndex = ownerID.findIndex(item => {
-      return item.id === msg.author.id;
-    })
-    let alert = ''
-    if (targetIndex > -1) {
-      getRightTime();
-      alert = calcTime('下班', date, formatTargetTime(ownerID[targetIndex].time));
-    } else {
-      alert = '看起來你還沒有設定下班時間哦'
-    }
-    msg.reply(alert);
-  }
-
-  // 查詢 下班剩餘時間
-  function cmd_offDuty(){
     return onValue(ref(db, 'off-duty-time'), (snapshot) => {
       const offDutyList = snapshot.val();
       let alert = ''
@@ -181,7 +137,7 @@ client.on('message', msg => {
       })
       if (targetIndex > -1) {
         getRightTime();
-        alert = calcTime('下班', date, formatTargetTime(ownerID[targetIndex].time));
+        alert = calcTime('下班', date, formatTargetTime(offDutyList[targetIndex].time));
       } else {
         alert = '看起來你還沒有設定下班時間哦'
       }
@@ -198,12 +154,21 @@ client.on('message', msg => {
         switch (msg.content) {
           case '設定下班時間':
             nowDoFunction = setGetOffWorkTime;
-            const filterList = filterOwnerID();
-            if (filterList.length === 0) {
-              msg.reply(`好的！請輸入您的下班時間\n（請用二十四小時制，分號請為半形，ex: 18:00)`);
-            } else {
-              msg.reply(`已存在資料，目前您的下班時間為：${filterList[0].time}。\n若要修改下班時間，請重新輸入\n（請用二十四小時制，分號請為半形，ex: 18:00)`);
-            }
+            return onValue(ref(db, 'off-duty-time'), (snapshot) => {
+              const offDutyList = snapshot.val();
+              let target = offDutyList.find(user => user.id === DoUserID)
+              if(target !== undefined) {
+                msg.reply(`已存在資料，目前您的下班時間為：**${target.time}**。\n若要修改下班時間，請重新輸入\n（請用二十四小時制，分號請為半形，ex: 18:00)`);
+              }else{
+                msg.reply(`好的！請輸入您的下班時間\n（請用二十四小時制，分號請為半形，ex: 18:00)`);
+              }
+            }, {
+              onlyOnce: true
+            });
+            break;
+          case '支語舉報':
+            nowDoFunction = reportChinaWord;
+            msg.reply(`請輸入您要舉報的支語詞彙（單個）`);
             break;
           case '沒事了':
             CloseAllDoingFunction();
@@ -211,21 +176,13 @@ client.on('message', msg => {
             break;
         }
       } else {
-        console.log('插話仔', msg.author.id);
-        angry.push(msg.author.id);
-        msg.channel.send('有人正找我呢，你憋吵');
+        // 記錄插話仔
+        recordInterruption();
       }
     }
     catch(error){
       console.error('ShibaError', error);
     }
-  }
-
-  function filterOwnerID(){
-    const filterList = ownerID.filter(list => {
-      return list.id === msg.author.id
-    })
-    return filterList
   }
 
   function setGetOffWorkTime(msg) {
@@ -234,52 +191,24 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content); // 下班時間
-          msg.channel.send(`
-              申請資料如下：\n
-              設定者 <@${msg.author.id}>\n
-              下班時間 - ${DoData[0]}
-              \n
-              \n
-              正確 Y / 錯誤 N
+          msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N
           `);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
-            msg.channel.send('已確認，輸入資料中...');
-            let index = ownerID.findIndex(item => {
-              return item.id === msg.author.id
-            });
-            if (index > -1) {
-              ownerID[index] = {
-                id: msg.author.id,
-                username: msg.author.username,
-                time: DoData[0]
+            msg.channel.send('已確認，資料輸入中...');
+            return onValue(ref(db, 'off-duty-time'), (snapshot) => {
+              const offDutyList = snapshot.val();
+              for (let i in offDutyList){
+                if (offDutyList[i].id === DoUserID) offDutyList[i].time = DoData[0];
               }
-            }else{
-              ownerID.push({
-                id: msg.author.id,
-                time: DoData[0]
-              })
-            }
-            msg.channel.send('輸入完畢！');
-            CloseAllDoingFunction();
-            //與舊資料比對，已有此人資料變進行更新
-            // CheckID(msg, null, EditOldUserPower, DoData[0]);
-            // GetGas.postUserPower(DoData, function(dataED) {
-            //     if (dataED) {
-            //         //bot內變數不會更新，手動更新
-            //         UserPowerData.unshift({
-            //             'userID': DoData[0],
-            //             'userName': DoData[1],
-            //             'Joins': DoData[2],
-            //             'IsAdmin': DoData[3]
-            //         });
-            //         msg.channel.send('輸入完畢!');
-            //     } else {
-            //         msg.channel.send('資料輸入失敗，請重新嘗試');
-            //     }
-            //     CloseAllDoingFunction();
-            // });
+              // 執行寫入
+              db_set_data('off-duty-time' ,offDutyList);
+              msg.channel.send('輸入完畢！');
+              CloseAllDoingFunction();
+            }, {
+              onlyOnce: true
+            });
           } else if (msg.content === 'N' || msg.content === 'n') {
             CloseAllDoingFunction();
             msg.channel.send('已取消操作，請重新下達指令')
@@ -296,6 +225,7 @@ client.on('message', msg => {
       console.error('addUserFunctionNowError', err);
     }
   }
+
   // 將輸入的訊息(下班時間)還原成系統能分析的格式 (ex: 2022-02-22 22:22)
   function formatTargetTime(str) {
     getRightTime();
@@ -344,6 +274,49 @@ client.on('message', msg => {
 
   function getRightTime(){
     date = new Date();
+  }
+
+
+  // 提供支語庫，國家會感謝你的
+  function reportChinaWord(msg) {
+    try {
+      switch (DoingCount) {
+        case 0:
+          DoData = []
+          DoData.push(msg.content)
+          msg.channel.send(`檢舉資料如下：\n > 設定者 <@${msg.author.id}>\n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
+          break;
+        case 1:
+          if (msg.content === 'Y' || msg.content === 'y') {
+            msg.channel.send('已確認，資料輸入中...');
+            return onValue(ref(db, 'china-police'), (snapshot) => {
+              const chinaWord = snapshot.val();
+              if(chinaWord === null || chinaWord === undefined){
+                chinaWord = []
+              }
+              chinaWord.push(DoData[0])
+              // 執行寫入
+              db_set_data('china-police', chinaWord);
+              msg.channel.send('輸入完畢！');
+              CloseAllDoingFunction();
+            }, {
+              onlyOnce: true
+            });
+          } else if (msg.content === 'N' || msg.content === 'n') {
+            CloseAllDoingFunction();
+            msg.channel.send('已取消操作，請重新下達指令');
+          } else {
+            DoingCount--;
+            msg.channel.send('無法辨識訊息，請輸入Y/N來選擇');
+          }
+          break;
+      }
+      if (DoUserID !== '') DoingCount++;
+    } catch (err) {
+      CloseAllDoingFunction();
+      client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
+      console.error('addUserFunctionNowError', err);
+    }
   }
 
   // 取得亂數
@@ -413,6 +386,7 @@ client.on('message', msg => {
         console.error('moraError', err);
       }
     } else {
+      recordInterruption();
       msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
     }
   }
@@ -443,6 +417,18 @@ client.on('message', msg => {
           break;
     }
     CloseAllDoingFunction();
+  }
+
+  // 紀錄打岔/插話仔
+  function recordInterruption(){
+    return onValue(ref(db, 'angry'), (snapshot) => {
+      getRightTime();
+      const angry = snapshot.val();
+      angry[`${date.getMonth()+1}-${date.getDate()}`].push(msg.author.id);
+      msg.reply('有人正找我呢，你憋吵');
+    }, {
+      onlyOnce: true
+    });
   }
 
   // 確認權限
