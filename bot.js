@@ -88,8 +88,8 @@ client.on('message', msg => {
           break;
       case '柴時間': // 查詢 機器時間
           getRightTime();
-          msg.channel.send(`柴柴本地時間：${date.getHours()}:${date.getMinutes()}`);
-          // msg.channel.send(`台灣時間：${date.getHours()+8}:${date.getMinutes()}`); // Heroku 主機時差
+          msg.channel.send(`柴柴本地時間：${showTime(date.getHours())}:${showTime(date.getMinutes())}`);
+          msg.channel.send(`台灣時間：${showTime(date.getHours()+8)}:${showTime(date.getMinutes())}`); // Heroku 主機時差
           break;
       // 娛樂功能 ------
       case '柴運勢':
@@ -240,6 +240,10 @@ client.on('message', msg => {
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
       console.error('addUserFunctionNowError', err);
     }
+  }
+
+  function showTime(item){
+    return (item < 10) ? `0${item}` : item;
   }
 
   // 將輸入的訊息(下班時間)還原成系統能分析的格式 (ex: 2022-02-22 22:22)
