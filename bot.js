@@ -86,8 +86,7 @@ client.on('message', msg => {
           break;
       case '柴時間': // 查詢 機器時間
           getRightTime();
-          msg.channel.send(`柴柴本地時間`);
-          msg.channel.send(`柴柴本地時間：${date.getHours()()}:${date.getMinutes()}`);
+          msg.channel.send(`柴柴本地時間：${date.getHours()}:${date.getMinutes()}`);
           break;
       // 娛樂功能 ------
       case '柴運勢':
