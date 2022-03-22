@@ -64,7 +64,7 @@ client.on('message', msg => {
               nowDoFunction = ShibaHlepMe;
             } else {
               // 紀錄插話仔
-              recordInterruption();
+              recordInterruption(msg);
               msg.channel.send('有其他人正在使用中，請稍等');
             }
           } catch (err) {
@@ -82,46 +82,8 @@ client.on('message', msg => {
           msg.reply(calcTime( '午休', date, formatTargetTime('12:00')));
           break;
       case '指令': // 查詢 指令列表
-          const embed1 = new Discord.MessageEmbed()
-            .setColor('#6dca1c')
-            .setTitle('指令列表')
-            .setAuthor('社畜的忠實好朋友 - 社畜柴柴')
-            .addField('社畜柴柴幫幫我', '設定相關的開頭')
-            .addField('設定下班時間', '設定/修改時間', true)
-            .addField('支語舉報', '提供支語，報效國家', true)
-            .addField('沒事了', '結束設定', true)
-          const embed2 = new Discord.MessageEmbed()
-            .setColor('#9EC2E5')
-            .setTitle('查詢相關')
-            .addField('下班/下班時間', '查詢距離下班剩餘時間')
-            .addField('午休', '查詢距離午休剩餘時間')
-          const embed3 = new Discord.MessageEmbed()
-            .setColor('#F48B16')
-            .setTitle('娛樂相關')
-            .addField('柴運勢', '每日運勢')
-            .addField('柴猜拳', '猜拳勝負')
-          msg.channel.send(embed1);
-          msg.channel.send(embed2);
-          msg.channel.send(embed3);
+          shibaCanDo();
           break;
-      // case '下班時間列表': // 列表式查看目前的資料
-      //     const embed = new Discord.MessageEmbed()
-      //       .setColor('#0099ff')
-      //       .setTitle('列表')
-      //       // .setURL('https://discord.js.org/')
-      //       .setAuthor('社畜的忠實好朋友 - 社畜柴柴', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org')
-      //       .setDescription('測試除錯用的啦')
-      //       // .setThumbnail('https://i.imgur.com/wSTFkRM.png')
-      //       .addField('\u200B', '\u200B')
-      //       // .setImage('https://i.imgur.com/wSTFkRM.png')
-      //       // .setTimestamp()
-      //       for(let i in ownerID){
-      //         let item = ownerID[i];
-      //         embed.addField(item.username, item.time, true)
-      //       }
-      //       // .setFooter('Some footer text here', 'https://i.imgur.com/wSTFkRM.png');
-      //     msg.channel.send(embed);
-      //     break;
       // 娛樂功能 ------
       case '柴運勢':
           Omikuji(msg);
@@ -137,14 +99,7 @@ client.on('message', msg => {
     }
 
     // 支語警察
-    return onValue(ref(db, 'china-police'), (snapshot) => {
-      const chinaWord = snapshot.val();
-      let police = chinaWord.find(word => cmd.indexOf(word) > -1)
-      if (police !== undefined) msg.reply(`https://ect.incognitas.net/szh_police/${getRandom(10000)}.jpg \n支語警告`)
-      // msg.reply(alert);
-    }, {
-      onlyOnce: true
-    });
+    chinaPolice(cmd);
 
   } catch (err) {
     console.error('OnMessageError', err);
@@ -170,6 +125,30 @@ client.on('message', msg => {
     });
   }
 
+  // 指令提示
+  function shibaCanDo(){
+    const embed1 = new Discord.MessageEmbed()
+      .setColor('#F48B16')
+      .setTitle('設定相關，請先輸入「社畜柴柴幫幫我」')
+      .addField('設定下班時間', '設定/修改時間')
+      .addField('支語舉報', '提供支語，報效國家')
+      .addField('沒事了', '結束設定')
+    const embed2 = new Discord.MessageEmbed()
+      .setColor('#9EC2E5')
+      .setTitle('查詢相關，可直接輸入下列指令')
+      .addField('下班/下班時間', '查詢距離下班剩餘時間')
+      .addField('午休', '查詢距離午休剩餘時間')
+    const embed3 = new Discord.MessageEmbed()
+      .setColor('#6dca1c')
+      .setTitle('娛樂相關，可直接輸入下列指令')
+      .addField('柴運勢', '每日運勢')
+      .addField('柴猜拳', '猜拳勝負')
+    msg.channel.send(' **社畜的忠實好朋友** - `社畜柴柴` ');
+    msg.channel.send(embed1);
+    msg.channel.send(embed2);
+    msg.channel.send(embed3);
+  }
+
   // 社畜柴柴幫幫我
   function ShibaHlepMe(msg){
     try{
@@ -193,6 +172,9 @@ client.on('message', msg => {
             nowDoFunction = reportChinaWord;
             msg.reply(`請輸入您要舉報的支語詞彙（單個）`);
             break;
+          case '你能做什麼':
+            shibaCanDo();
+            break;
           case '沒事了':
             CloseAllDoingFunction();
             msg.channel.send('OK～那我回去睡搞搞了');
@@ -200,7 +182,7 @@ client.on('message', msg => {
         }
       } else {
         // 記錄插話仔
-        recordInterruption();
+        recordInterruption(msg);
       }
     }
     catch(error){
@@ -208,6 +190,7 @@ client.on('message', msg => {
     }
   }
 
+  // 設定下班時間
   function setGetOffWorkTime(msg) {
     try {
       switch (DoingCount) {
@@ -299,7 +282,17 @@ client.on('message', msg => {
     date = new Date();
   }
 
-
+  // 支語警察
+  function chinaPolice(cmd){
+    return onValue(ref(db, 'china-police'), (snapshot) => {
+      const chinaWord = snapshot.val();
+      let police = chinaWord.find(word => cmd.indexOf(word) > -1)
+      if (police !== undefined) msg.reply(`https://ect.incognitas.net/szh_police/${getRandom(10000)}.jpg \n支語警告`)
+      // msg.reply(alert);
+    }, {
+      onlyOnce: true
+    });
+  }
   // 提供支語庫，國家會感謝你的
   function reportChinaWord(msg) {
     try {
@@ -409,7 +402,7 @@ client.on('message', msg => {
         console.error('moraError', err);
       }
     } else {
-      recordInterruption();
+      recordInterruption(msg);
       msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
     }
   }
@@ -443,7 +436,7 @@ client.on('message', msg => {
   }
 
   // 紀錄打岔/插話仔
-  function recordInterruption(){
+  function recordInterruption(msg){
     return onValue(ref(db, 'angry'), (snapshot) => {
       getRightTime();
       const angry = snapshot.val();
