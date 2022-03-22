@@ -60,12 +60,14 @@ client.on('message', msg => {
           try {
             if (DoUserID === '') {
               msg.channel.send('汪嗚～有什麼我能效勞的嗎？');
+              break;
               DoUserID = msg.author.id;
               nowDoFunction = ShibaHlepMe;
             } else {
               // 紀錄插話仔
               recordInterruption(msg);
               msg.channel.send('有其他人正在使用中，請稍等');
+              break;
             }
           } catch (err) {
             console.error('ShibaHlepMeError', err);
@@ -87,6 +89,7 @@ client.on('message', msg => {
       case '柴時間': // 查詢 機器時間
           getRightTime();
           msg.channel.send(`柴柴本地時間：${date.getHours()()}:${date.getMinutes()}`);
+          break;
       // 娛樂功能 ------
       case '柴運勢':
           Omikuji(msg);
@@ -147,9 +150,13 @@ client.on('message', msg => {
       .addField('柴運勢', '每日運勢')
       .addField('柴猜拳', '猜拳勝負')
     msg.channel.send(' **社畜的忠實好朋友** - `社畜柴柴` ');
+    break;
     msg.channel.send(embed1);
+    break;
     msg.channel.send(embed2);
+    break;
     msg.channel.send(embed3);
+    break;
   }
 
   // 社畜柴柴幫幫我
@@ -182,6 +189,7 @@ client.on('message', msg => {
             CloseAllDoingFunction();
             msg.channel.send('OK～那我回去睡搞搞了');
             break;
+            break;
         }
       } else {
         // 記錄插話仔
@@ -201,11 +209,13 @@ client.on('message', msg => {
           DoData = []
           DoData.push(msg.content); // 下班時間
           msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N
+          break;
           `);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
             msg.channel.send('已確認，資料輸入中...');
+            break;
             return onValue(ref(db, 'off-duty-time'), (snapshot) => {
               const offDutyList = snapshot.val();
               for (let i in offDutyList){
@@ -214,6 +224,7 @@ client.on('message', msg => {
               // 執行寫入
               db_set_data('off-duty-time' ,offDutyList);
               msg.channel.send('輸入完畢！');
+              break;
               CloseAllDoingFunction();
             }, {
               onlyOnce: true
@@ -221,9 +232,11 @@ client.on('message', msg => {
           } else if (msg.content === 'N' || msg.content === 'n') {
             CloseAllDoingFunction();
             msg.channel.send('已取消操作，請重新下達指令')
+            break;
           } else {
             DoingCount--;
             msg.channel.send('無法辨識訊息，請輸入Y/N來選擇');
+            break;
           }
           break;
       }
@@ -305,9 +318,11 @@ client.on('message', msg => {
           DoData.push(msg.content)
           msg.channel.send(`檢舉資料如下：\n > 設定者 <@${msg.author.id}>\n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
+          break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
             msg.channel.send('已確認，資料輸入中...');
+            break;
             return onValue(ref(db, 'china-police'), (snapshot) => {
               const chinaWord = snapshot.val();
               if(chinaWord === null || chinaWord === undefined){
@@ -317,6 +332,7 @@ client.on('message', msg => {
               // 執行寫入
               db_set_data('china-police', chinaWord);
               msg.channel.send('輸入完畢！');
+              break;
               CloseAllDoingFunction();
             }, {
               onlyOnce: true
@@ -324,9 +340,11 @@ client.on('message', msg => {
           } else if (msg.content === 'N' || msg.content === 'n') {
             CloseAllDoingFunction();
             msg.channel.send('已取消操作，請重新下達指令');
+            break;
           } else {
             DoingCount--;
             msg.channel.send('無法辨識訊息，請輸入Y/N來選擇');
+            break;
           }
           break;
       }
@@ -385,12 +403,16 @@ client.on('message', msg => {
           case 0:
             if (msg.content !== '剪刀' && msg.content !== '石頭' && msg.content !== '布'){
               msg.channel.send(`欸，我看不懂你在出什麼啦～`)
+              break;
               DoingCount --;
             }else{
               msg.channel.send(`我出「${botMora}」！`)
+              break;
               if (botMora === msg.content){
                 msg.channel.send(`哎呀，看來我們不分勝負呢～`);
+                break;
                 msg.channel.send(`再來！`);
+                break;
                 DoingCount --;
               } else { // 分出勝負
                 moraWinner(botMora, msg.content);
@@ -407,6 +429,7 @@ client.on('message', msg => {
     } else {
       recordInterruption(msg);
       msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
+      break;
     }
   }
 
@@ -416,22 +439,28 @@ client.on('message', msg => {
       case '剪刀':
           if(bot === '布'){
             msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+            break;
           } else{
             msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+            break;
           }
           break;
       case '石頭':
           if (bot === '剪刀') {
             msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+            break;
           } else {
             msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+            break;
           }
           break;
       case '布':
           if (bot === '石頭') {
             msg.channel.send(`汪嗚～居然是${player}，我輸啦！`);
+            break;
           } else {
             msg.channel.send(`勝敗乃兵家常事，大俠請重新來過`);
+            break;
           }
           break;
     }
