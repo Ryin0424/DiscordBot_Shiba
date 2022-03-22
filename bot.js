@@ -84,6 +84,9 @@ client.on('message', msg => {
       case '指令': // 查詢 指令列表
           shibaCanDo();
           break;
+      case '時間': // 查詢 機器時間
+          getRightTime();
+          msg.channel.send(`柴柴本地時間：${date.getHours()()}:${date.getMinutes()}`);
       // 娛樂功能 ------
       case '柴運勢':
           Omikuji(msg);
