@@ -1,0 +1,8 @@
+{
+  "firebaseConfig": {
+    "apiKey": "Your Firebase API key... blablabla"
+  },
+  "discord_auth": {
+    "key": "Your discord bot key"
+  }
+}
