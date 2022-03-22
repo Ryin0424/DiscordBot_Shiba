@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const config = require('./JSON/config.json');
 
+
 // set firebase
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, set, onValue, get, child } = require("firebase/database");
@@ -15,6 +16,7 @@ let DoData = undefined;
 
 // 設定時間
 let date = false;
+const moment = require('moment');
 
 // bot 上線
 client.login(config.discord_auth.key);
@@ -87,6 +89,8 @@ client.on('message', msg => {
       case '柴時間': // 查詢 機器時間
           getRightTime();
           msg.channel.send(`柴柴本地時間：${date.getHours()}:${date.getMinutes()}`);
+          const TaiwanDate = moment(date).tz('Asia/Taipei');
+          msg.channel.send(`台灣當地時間：${TaiwanDate.getHours()}:${TaiwanDate.getMinutes()}`);
           break;
       // 娛樂功能 ------
       case '柴運勢':
