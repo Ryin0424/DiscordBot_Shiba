@@ -204,9 +204,7 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content); // 下班時間
-          msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N
-          break;
-          `);
+          msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
@@ -316,7 +314,6 @@ client.on('message', msg => {
           DoData = []
           DoData.push(msg.content)
           msg.channel.send(`檢舉資料如下：\n > 設定者 <@${msg.author.id}>\n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
-          break;
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
