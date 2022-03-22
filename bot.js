@@ -179,6 +179,7 @@ client.on('message', msg => {
             msg.reply(`請輸入您要舉報的支語詞彙（單個）`);
             break;
           case '你能做什麼':
+            CloseAllDoingFunction();
             shibaCanDo();
             break;
           case '沒事了':
