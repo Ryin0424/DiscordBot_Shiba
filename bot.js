@@ -80,8 +80,7 @@ client.on('message', msg => {
           break;
       case '午休': // 查詢 距離午休剩餘時間
           getRightTime();
-          // msg.reply(calcTime( '午休', date, formatTargetTime('12:00')));
-          msg.reply(calcTime('午休', date, formatTargetTime('20:00'))); // Heroku 主機時差
+          msg.reply(calcTime('午休', date, formatTargetTime('12:00')));
           break;
       case '指令': // 查詢 指令列表
           shibaCanDo();
@@ -258,8 +257,8 @@ client.on('message', msg => {
 
   // 計算下班剩餘時間
   function calcTime(type, now, target) {
-    // const diff = (timeToString(target) - timeToString(now))
-    const diff = (timeToString(target)+28800000 - timeToString(now)) // Heroku 主機時差 (8小時，8*60*60*1000)
+    // const diff = (timeToString(target) - timeToString(now));
+    const diff = (timeToString(target) - timeToString(now) -28800000); // Heroku 主機時差 (8小時，8*60*60*1000)
     // 無條件捨去，1000(毫秒) 60(秒) 60(分)
     let hour = Math.trunc(diff / 1000 / 60 / 60);
     let min = Math.trunc(diff / 1000 / 60 - hour * 60);
