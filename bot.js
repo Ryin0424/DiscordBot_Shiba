@@ -16,7 +16,7 @@ let DoData = undefined;
 
 // 設定時間
 let date = false;
-const moment = require('moment');
+const moment = require('moment-timezone'); //moment-timezone
 
 // bot 上線
 client.login(config.discord_auth.key);
