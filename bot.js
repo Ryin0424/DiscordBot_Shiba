@@ -501,7 +501,7 @@ client.on('message', msg => {
     if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
       AnswerLimited --;
       try {
-        if (Number(msg.content) > PasswordMax || Number(msg.content)  < PasswordMin){ // 輸入數字 大於最大 或 小於最小
+        if (Number(msg.content) >= PasswordMax || Number(msg.content)  <= PasswordMin){ // 輸入數字 大於最大 或 小於最小
           msg.channel.send(`喂喂！看清楚範圍啊`);
           AnswerLimited ++;
         }else if (msg.content < ultimatePasswordKey) {
