@@ -501,10 +501,13 @@ client.on('message', msg => {
     if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
       AnswerLimited --;
       try {
-        if (Number(msg.content) >= PasswordMax || Number(msg.content)  <= PasswordMin){ // 輸入數字 大於最大 或 小於最小
+        if (Number(msg.content) === NaN){
+          msg.channel.send(`你好歹也輸入數字吧...難道你是猴子嗎？`);
+          AnswerLimited++;
+        } else if (Number(msg.content) >= PasswordMax || Number(msg.content)  <= PasswordMin){ // 輸入數字 大於最大 或 小於最小
           msg.channel.send(`喂喂！看清楚範圍啊`);
           AnswerLimited ++;
-        }else if (msg.content < ultimatePasswordKey) {
+        } else if (msg.content < ultimatePasswordKey) {
           PasswordMin = Number(msg.content) ;
           msg.channel.send(`${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax}${codeArea} 剩餘次數：${AnswerLimited} 次`);
         } else if (msg.content > ultimatePasswordKey) {
