@@ -483,7 +483,7 @@ client.on('message', msg => {
     if (msg.author.id === DoUserID && msg.channel.id === DoingChannel){
       if (msg.content === '變更規則') {
         nowDoFunction = changePasswordRole;
-        msg.channel.send(`請輸入新的數字範圍及回答次數，並以「/」分開\n(ex: 範圍為 **10~500**，回答限制**20**次內，則輸入「10~500/20」)`);
+        msg.channel.send(`請輸入新的數字範圍及回答次數，並以「/」分開\n(ex: 範圍為 **10~500**，回答限制 **20** 次內，則輸入「10~500/20」)`);
       } else {
         ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
         doPassword(msg);
@@ -501,7 +501,7 @@ client.on('message', msg => {
     if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
       AnswerLimited --;
       try {
-        if (Number(msg.content) === NaN){
+        if (isNaN(Number(msg.content))){
           msg.channel.send(`你好歹也輸入數字吧...難道你是猴子嗎？`);
           AnswerLimited++;
         } else if (Number(msg.content) >= PasswordMax || Number(msg.content)  <= PasswordMin){ // 輸入數字 大於最大 或 小於最小
@@ -533,7 +533,6 @@ client.on('message', msg => {
       recordInterruption(msg, `噓，<@${DoUserID}>現在正在經歷拆彈的緊張時刻呢`);
     }
   }
-
   // 變更終極密碼的規則
   function changePasswordRole(msg) {
     if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
@@ -542,10 +541,15 @@ client.on('message', msg => {
       let range = ary[0].split("~");
       PasswordMin = range[0];
       PasswordMax = range[1];
-      console.log(typeof PasswordMin)
-      msg.channel.send(`更新規則如下：\n${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax} \n回答次數：${AnswerLimited} 次以內${codeArea}本柴已經決定好密碼了，來吧！`);
-      ultimatePasswordKey = getRangeRandom(Number(PasswordMin) + 1, Number(PasswordMax) - 1);
-      nowDoFunction = doPassword;
+      if (isNaN(Number(PasswordMin)) || isNaN(Number(PasswordMax)) || isNaN(Number(AnswerLimited))) {
+        msg.channel.send(`輸入資料有誤，請重新設定`);
+      } else if (Number(PasswordMin) === Number(PasswordMax) || Number(PasswordMax) - Number(PasswordMin) === 1) {
+        msg.channel.send(`你這樣我沒辦法設定密碼啦～`);
+      }else {
+        msg.channel.send(`更新規則如下：\n${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax} \n回答次數：${AnswerLimited} 次以內${codeArea}本柴已經決定好密碼了，來吧！`);
+        ultimatePasswordKey = getRangeRandom(Number(PasswordMin) + 1, Number(PasswordMax) - 1);
+        nowDoFunction = doPassword;
+      }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
     } else {
