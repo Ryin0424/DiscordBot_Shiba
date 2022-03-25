@@ -17,6 +17,8 @@ let DoingChannel = '';
 
 // 設定時間
 let date = false;
+// 設定 DC code 字符串
+let codeArea = '```';
 
 // bot 上線
 client.login(config.discord_auth.key);
@@ -101,6 +103,12 @@ client.on('message', msg => {
           DoingChannel = msg.channel.id; // 確認目前作用頻道
           msg.reply('一決勝負吧！');
           break;
+      case '柴猜數':
+          nowDoFunction = ultimatePassword;
+          DoUserID = msg.author.id; // 鎖定一人參與
+          DoingChannel = msg.channel.id; // 確認目前作用頻道
+          msg.channel.send(`${codeArea}密碼範圍：1 ~ 100 \n回答次數：5 次以內${codeArea}本柴已經決定好密碼了，來吧！\n\n如需變更範圍及次數，請輸入「變更規則」`);
+          break;
       // default: //身份組ID
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
       //   break;
@@ -151,7 +159,7 @@ client.on('message', msg => {
       .setTitle('娛樂相關，可直接輸入下列指令')
       .addField('柴運勢', '每日運勢')
       .addField('柴猜拳', '猜拳勝負')
-      .addField('柴猜數', '終極密碼')
+      .addField('柴猜數', '終極密碼拆炸彈')
     msg.channel.send(' **社畜的忠實好朋友** - `社畜柴柴` ');
     msg.channel.send(embed1);
     msg.channel.send(embed2);
@@ -191,7 +199,7 @@ client.on('message', msg => {
             break;
         }
       } else if (DoingChannel !== msg.channel.id) {
-        msg.channel.send('有其他人正在使用柴柴服務，請稍候');
+        // do nothing
       } else {
         // 記錄插話仔
         recordInterruption(msg, '有人正找我呢，你憋吵');
@@ -360,12 +368,15 @@ client.on('message', msg => {
   function getRandom(x) {
     return Math.floor(Math.random() * x);
   }
+  // example: min = 0, max = 3，則得到 0~3之間的亂數 (0.1.2.3)
+  function getRangeRandom(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
 
   // 柴運勢
   function Omikuji(msg) {
     const fortune = ['大吉', '大兇', '中吉', '中兇', '小吉', '小兇', '末吉', '沒吉', '沒兇', '吉', '兇', '柴曰：不可說', '施主這個問題你還是別深究了吧', '超吉', '究吉', '兇貴'];
     let answer = fortune[getRandom(fortune.length)];
-    let codeArea = '```';
     let flag1 = "　　   ○ ＿＿＿＿";
     let flag2 = "　　   ∥　　　　|";
     let flag3 = "　　   ∥ 看上面 |";
@@ -421,7 +432,7 @@ client.on('message', msg => {
         client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
         console.error('柴猜拳(doMora) Error', err);
       }
-    } else if (msg.channel.id !== DoingChannel) {
+    } else if (DoingChannel !== msg.channel.id) {
       // do nothing
     } else {
       recordInterruption(msg, `請不要打擾我跟<@${DoUserID}>的決鬥`);
@@ -463,6 +474,69 @@ client.on('message', msg => {
   }
 
 
+  // 終極密碼功能
+  let PasswordMin = 1;
+  let PasswordMax = 100;
+  let AnswerLimited = 5;
+  let ultimatePasswordKey = "";
+  function ultimatePassword(msg) {
+    if (msg.content === '變更規則') {
+      nowDoFunction = changePasswordRole;
+      msg.channel.send(`請輸入新的數字範圍及回答次數，並以「/」分開\n(ex: 範圍為 **10~500**，回答限制**20**次內，則輸入「10~500/20」)`);
+    } else {
+      ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
+      doPassword(msg);
+      nowDoFunction = doPassword;
+    }
+  }
+
+  // 終極密碼遊戲開始
+  function doPassword(msg){
+    if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
+      AnswerLimited --;
+      try {
+        if (Number(msg.content) > PasswordMax || Number(msg.content)  < PasswordMin){ // 輸入數字 大於最大 或 小於最小
+          msg.channel.send(`喂喂！看清楚範圍啊`);
+          AnswerLimited ++;
+        }else if (msg.content < ultimatePasswordKey) {
+          PasswordMin = Number(msg.content) ;
+          msg.channel.send(`${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax}${codeArea} 剩餘次數：${AnswerLimited} 次`);
+        } else if (msg.content > ultimatePasswordKey) {
+          PasswordMax = Number(msg.content) ;
+          msg.channel.send(`${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax}${codeArea} 剩餘次數：${AnswerLimited} 次`);
+        } else if (Number(msg.content) === ultimatePasswordKey){
+          CloseAllDoingFunction();
+          AnswerLimited++;
+          msg.reply(`恭喜拆彈成功！\nhttps://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif`);
+        }
+        if (AnswerLimited <= 0) {
+          CloseAllDoingFunction();
+          msg.reply('砰！次數歸零，拆彈失敗\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif');
+        }
+      } catch (err) {
+        CloseAllDoingFunction();
+        client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
+        console.error('終極密碼(doPassword) Error', err);
+      }
+    } else if (DoingChannel !== msg.channel.id) {
+      // do nothing
+    } else {
+      recordInterruption(msg, `噓，<@${DoUserID}>現在正在經歷拆彈的緊張時刻呢`);
+    }
+  }
+
+  // 變更終極密碼的規則
+  function changePasswordRole(msg) {
+    let ary = msg.content.split("/");
+    AnswerLimited = ary[1];
+    let range = ary[0].split("~");
+    PasswordMin = range[0];
+    PasswordMax = range[1];
+    console.log(typeof PasswordMin)
+    msg.channel.send(`更新規則如下：\n${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax} \n回答次數：${AnswerLimited} 次以內${codeArea}本柴已經決定好密碼了，來吧！`);
+    ultimatePasswordKey = getRangeRandom(Number(PasswordMin) + 1, Number(PasswordMax) - 1);
+    nowDoFunction = doPassword;
+  }
 
   // 紀錄打岔/插話仔
   function recordInterruption(msg, text){
