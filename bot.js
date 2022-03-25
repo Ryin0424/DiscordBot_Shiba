@@ -480,13 +480,19 @@ client.on('message', msg => {
   let AnswerLimited = 5;
   let ultimatePasswordKey = "";
   function ultimatePassword(msg) {
-    if (msg.content === '變更規則') {
-      nowDoFunction = changePasswordRole;
-      msg.channel.send(`請輸入新的數字範圍及回答次數，並以「/」分開\n(ex: 範圍為 **10~500**，回答限制**20**次內，則輸入「10~500/20」)`);
+    if (msg.author.id === DoUserID && msg.channel.id === DoingChannel){
+      if (msg.content === '變更規則') {
+        nowDoFunction = changePasswordRole;
+        msg.channel.send(`請輸入新的數字範圍及回答次數，並以「/」分開\n(ex: 範圍為 **10~500**，回答限制**20**次內，則輸入「10~500/20」)`);
+      } else {
+        ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
+        doPassword(msg);
+        nowDoFunction = doPassword;
+      }
+    } else if (DoingChannel !== msg.channel.id) {
+      // do nothing
     } else {
-      ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
-      doPassword(msg);
-      nowDoFunction = doPassword;
+      recordInterruption(msg, '安靜，有人正要開始拆彈呢');
     }
   }
 
@@ -511,7 +517,7 @@ client.on('message', msg => {
         }
         if (AnswerLimited <= 0) {
           CloseAllDoingFunction();
-          msg.reply('砰！次數歸零，拆彈失敗\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif');
+          msg.reply(`砰！次數歸零，拆彈失敗\n正確密碼是：**${ultimatePasswordKey}**\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif`);
         }
       } catch (err) {
         CloseAllDoingFunction();
@@ -527,15 +533,21 @@ client.on('message', msg => {
 
   // 變更終極密碼的規則
   function changePasswordRole(msg) {
-    let ary = msg.content.split("/");
-    AnswerLimited = ary[1];
-    let range = ary[0].split("~");
-    PasswordMin = range[0];
-    PasswordMax = range[1];
-    console.log(typeof PasswordMin)
-    msg.channel.send(`更新規則如下：\n${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax} \n回答次數：${AnswerLimited} 次以內${codeArea}本柴已經決定好密碼了，來吧！`);
-    ultimatePasswordKey = getRangeRandom(Number(PasswordMin) + 1, Number(PasswordMax) - 1);
-    nowDoFunction = doPassword;
+    if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
+      let ary = msg.content.split("/");
+      AnswerLimited = ary[1];
+      let range = ary[0].split("~");
+      PasswordMin = range[0];
+      PasswordMax = range[1];
+      console.log(typeof PasswordMin)
+      msg.channel.send(`更新規則如下：\n${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax} \n回答次數：${AnswerLimited} 次以內${codeArea}本柴已經決定好密碼了，來吧！`);
+      ultimatePasswordKey = getRangeRandom(Number(PasswordMin) + 1, Number(PasswordMax) - 1);
+      nowDoFunction = doPassword;
+    } else if (DoingChannel !== msg.channel.id) {
+      // do nothing
+    } else {
+      recordInterruption(msg, `還在設定中呢，別亂啦～`);
+    }
   }
 
   // 紀錄打岔/插話仔
