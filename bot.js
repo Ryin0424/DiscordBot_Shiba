@@ -13,6 +13,7 @@ let nowDoFunction = false;
 let DoingCount = 0;
 let DoUserID = '';
 let DoData = undefined;
+let DoingChannel = '';
 
 // 設定時間
 let date = false;
@@ -40,7 +41,7 @@ client.on('message', msg => {
     if(msg.member.user.bot) return; // 消息由機器人發送，不回應
   }
   catch(error){
-    console.error(error);
+    console.error('前置判斷 Error',error);
     return;
   }
 
@@ -62,14 +63,14 @@ client.on('message', msg => {
             if (DoUserID === '') {
               msg.channel.send('汪嗚～有什麼我能效勞的嗎？');
               DoUserID = msg.author.id;
+              DoingChannel = msg.channel.id; // 確認目前作用頻道
               nowDoFunction = ShibaHlepMe;
             } else {
               // 紀錄插話仔
-              recordInterruption(msg);
-              msg.channel.send('有其他人正在使用中，請稍等');
+              recordInterruption(msg, '有人正找我呢，你憋吵');
             }
           } catch (err) {
-            console.error('ShibaHlepMeError', err);
+            console.error('社畜柴柴幫幫我(ShibaHlepMe) Error', err);
           }
           break;
       case '下班時間': // 查詢 距離下班剩餘時間
@@ -97,6 +98,7 @@ client.on('message', msg => {
       case '柴猜拳':
           nowDoFunction = doMora;
           DoUserID = msg.author.id;
+          DoingChannel = msg.channel.id; // 確認目前作用頻道
           msg.reply('一決勝負吧！');
           break;
       // default: //身份組ID
@@ -108,7 +110,7 @@ client.on('message', msg => {
     chinaPolice(cmd);
 
   } catch (err) {
-    console.error('OnMessageError', err);
+    console.error('輸入訊息(OnMessage) Error', err);
   }
 
   // 查詢下班時間
@@ -137,7 +139,7 @@ client.on('message', msg => {
       .setColor('#F48B16')
       .setTitle('設定相關，請先輸入「社畜柴柴幫幫我」')
       .addField('設定下班時間', '設定/修改時間')
-      .addField('支語舉報', '提供支語，報效國家')
+      .addField('支語舉報', '提防支語入侵，人人有責')
       .addField('沒事了', '結束設定')
     const embed2 = new Discord.MessageEmbed()
       .setColor('#9EC2E5')
@@ -149,6 +151,7 @@ client.on('message', msg => {
       .setTitle('娛樂相關，可直接輸入下列指令')
       .addField('柴運勢', '每日運勢')
       .addField('柴猜拳', '猜拳勝負')
+      .addField('柴猜數', '終極密碼')
     msg.channel.send(' **社畜的忠實好朋友** - `社畜柴柴` ');
     msg.channel.send(embed1);
     msg.channel.send(embed2);
@@ -158,7 +161,7 @@ client.on('message', msg => {
   // 社畜柴柴幫幫我
   function ShibaHlepMe(msg){
     try{
-      if (DoUserID === msg.author.id) {
+      if (DoUserID === msg.author.id && DoingChannel === msg.channel.id) {
         switch (msg.content) {
           case '設定下班時間':
             nowDoFunction = setGetOffWorkTime;
@@ -187,13 +190,15 @@ client.on('message', msg => {
             msg.channel.send('OK～那我回去睡搞搞了');
             break;
         }
+      } else if (DoingChannel !== msg.channel.id) {
+        msg.channel.send('有其他人正在使用柴柴服務，請稍候');
       } else {
         // 記錄插話仔
-        recordInterruption(msg);
+        recordInterruption(msg, '有人正找我呢，你憋吵');
       }
     }
     catch(error){
-      console.error('ShibaError', error);
+      console.error('社畜柴柴幫幫我(At Shiba) Error', error);
     }
   }
 
@@ -236,7 +241,7 @@ client.on('message', msg => {
     } catch (err) {
       CloseAllDoingFunction();
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.error('addUserFunctionNowError', err);
+      console.error('設定下班時間(setGetOffWorkTime) Error', err);
     }
   }
 
@@ -346,7 +351,7 @@ client.on('message', msg => {
     } catch (err) {
       CloseAllDoingFunction();
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.error('addUserFunctionNowError', err);
+      console.error('支語舉報(reportChinaWord) Error', err);
     }
   }
 
@@ -389,7 +394,7 @@ client.on('message', msg => {
 
   // 柴猜拳
   function doMora(msg) {
-    if (msg.author.id === DoUserID){
+    if (msg.author.id === DoUserID && msg.channel.id === DoingChannel) {
       const mora = ['剪刀', '石頭', '布'];
       const botMora = mora[getRandom(3)];
       try {
@@ -414,11 +419,12 @@ client.on('message', msg => {
       } catch (err) {
         CloseAllDoingFunction();
         client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-        console.error('moraError', err);
+        console.error('柴猜拳(doMora) Error', err);
       }
+    } else if (msg.channel.id !== DoingChannel) {
+      // do nothing
     } else {
-      recordInterruption(msg);
-      msg.channel.send(`請不要打擾我跟<@${DoUserID}>的決鬥`)
+      recordInterruption(msg, `請不要打擾我跟<@${DoUserID}>的決鬥`);
     }
   }
 
@@ -456,13 +462,24 @@ client.on('message', msg => {
     CloseAllDoingFunction();
   }
 
+
+
   // 紀錄打岔/插話仔
-  function recordInterruption(msg){
+  function recordInterruption(msg, text){
     return onValue(ref(db, 'angry'), (snapshot) => {
       getRightTime();
       const angry = snapshot.val();
-      angry[`${date.getMonth()+1}-${date.getDate()}`].push(msg.author.id);
-      msg.reply('有人正找我呢，你憋吵');
+      const today = `${date.getMonth()+1}-${date.getDate()}`
+      if(angry === null){
+        let newData = {};
+        newData[today] = [];
+        newData[today].push(msg.author.id);
+        db_set_data('angry', newData);
+      }else{
+        angry[today].push(msg.author.id);
+        db_set_data('angry', angry);
+      }
+      msg.reply(text);
     }, {
       onlyOnce: true
     });
@@ -482,6 +499,7 @@ client.on('message', msg => {
     nowDoFunction = false;
     DoingCount = 0;
     DoUserID = '';
+    DoingChannelg = '';
     DoData = undefined;
   }
 
