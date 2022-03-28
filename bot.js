@@ -520,12 +520,12 @@ client.on('message', msg => {
         } else if (Number(msg.content) === ultimatePasswordKey){
           CloseAllDoingFunction();
           AnswerLimited++;
-          getAchievement(msg.author.id, "柴猜數", 'win');
+          getAchievement(DoUserID, "柴猜數", 'win');
           msg.reply(`恭喜拆彈成功！\nhttps://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif`);
         }
         if (AnswerLimited <= 0) {
           CloseAllDoingFunction();
-          getAchievement(msg.author.id, "柴猜數", 'lose');
+          getAchievement(DoUserID, "柴猜數", 'lose');
           msg.reply(`砰！次數歸零，拆彈失敗\n正確密碼是：**${ultimatePasswordKey}**\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif`);
         }
       } catch (err) {
@@ -656,6 +656,10 @@ client.on('message', msg => {
     }, {
       onlyOnce: true
     });
+  }
+
+  function timer(){
+    setInterval({}, 1000);
   }
 
   // 確認權限
