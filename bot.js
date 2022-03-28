@@ -658,10 +658,6 @@ client.on('message', msg => {
     });
   }
 
-  function timer(){
-    setInterval({}, 1000);
-  }
-
   // 確認權限
   // userRole 使用者擁有的身份組ID
   // targetRole 確認是否擁有的身份組ID
