@@ -518,14 +518,14 @@ client.on('message', msg => {
           PasswordMax = Number(msg.content) ;
           msg.channel.send(`${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax}${codeArea} 剩餘次數：${AnswerLimited} 次`);
         } else if (Number(msg.content) === ultimatePasswordKey){
+          getAchievement(DoUserID, "柴猜數", 'win');
           CloseAllDoingFunction();
           AnswerLimited++;
-          getAchievement(DoUserID, "柴猜數", 'win');
           msg.reply(`恭喜拆彈成功！\nhttps://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif`);
         }
         if (AnswerLimited <= 0) {
-          CloseAllDoingFunction();
           getAchievement(DoUserID, "柴猜數", 'lose');
+          CloseAllDoingFunction();
           msg.reply(`砰！次數歸零，拆彈失敗\n正確密碼是：**${ultimatePasswordKey}**\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif`);
         }
       } catch (err) {
