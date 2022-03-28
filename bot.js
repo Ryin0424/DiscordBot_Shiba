@@ -491,7 +491,9 @@ client.on('message', msg => {
       } else {
         ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
         doPassword(msg);
-        nowDoFunction = doPassword;
+        if (DoUserID !== '') {
+          nowDoFunction = doPassword;
+        }
       }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
