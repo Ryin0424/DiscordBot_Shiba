@@ -109,6 +109,10 @@ client.on('message', msg => {
           DoingChannel = msg.channel.id; // 確認目前作用頻道
           msg.channel.send(`${codeArea}密碼範圍：1 ~ 100 \n回答次數：5 次以內${codeArea}本柴已經決定好密碼了，來吧！\n\n如需變更範圍及次數，請輸入「變更規則」`);
           break;
+      case '柴成績':
+          msg.channel.send("正在取得個人成績紀錄...");
+          getMyAchievement(msg);
+          break;
       // default: //身份組ID
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
       //   break;
@@ -516,10 +520,12 @@ client.on('message', msg => {
         } else if (Number(msg.content) === ultimatePasswordKey){
           CloseAllDoingFunction();
           AnswerLimited++;
+          getAchievement(msg.author.id, "柴猜數", 'win');
           msg.reply(`恭喜拆彈成功！\nhttps://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif`);
         }
         if (AnswerLimited <= 0) {
           CloseAllDoingFunction();
+          getAchievement(msg.author.id, "柴猜數", 'lose');
           msg.reply(`砰！次數歸零，拆彈失敗\n正確密碼是：**${ultimatePasswordKey}**\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif`);
         }
       } catch (err) {
@@ -573,6 +579,80 @@ client.on('message', msg => {
         db_set_data('angry', angry);
       }
       msg.reply(text);
+    }, {
+      onlyOnce: true
+    });
+  }
+
+  // 設定/取得人員成就資料
+  function getAchievement(authorId, game, result) {
+    return onValue(ref(db, 'achievement'), (snapshot) => {
+      let achievementData = snapshot.val();
+      if (achievementData === null) {
+        achievementData = []
+        let newMember = {
+          id: authorId,
+          bombDisposal: {
+            win: 0,
+            lose: 0
+          }
+        };
+        let newRecord = recordAchievement(newMember, game, result);
+        achievementData.push(newRecord);
+        db_set_data('achievement', achievementData);
+      } else {
+        let target = achievementData.find(member => member.id === authorId); // 尋找成就列表中有無資料
+        if (target === undefined) { // 尚未建立資料，設定之
+          let newMember = {
+            id: authorId,
+            bombDisposal: {
+              win: 0,
+              lose: 0
+            }
+          };
+          let newRecord = recordAchievement(newMember, game, result);
+          achievementData.push(newRecord);
+          db_set_data('achievement', achievementData);
+        } else {
+          target = recordAchievement(target, game, result);
+          db_set_data('achievement', achievementData);
+        }
+      }
+    }, {
+      onlyOnce: true
+    });
+  }
+
+  // 紀錄遊戲的成就分數
+  function recordAchievement(member, game, result) {
+    switch (game) {
+      case '柴猜數':
+        if (result === 'win') {
+          member.bombDisposal.win = member.bombDisposal.win + 1;
+        } else {
+          member.bombDisposal.lose = member.bombDisposal.lose + 1;
+        }
+        break;
+    }
+    return member;
+  }
+
+  // 取得個人成就成績
+  function getMyAchievement(msg) {
+    return onValue(ref(db, 'achievement'), (snapshot) => {
+      let achievementData = snapshot.val();
+      let target = achievementData.find(member => member.id === msg.author.id);
+      if (target === undefined) {
+        msg.channel.send("目前還沒有任何成績紀錄哦");
+      } else {
+        let all = target.bombDisposal.win + target.bombDisposal.lose;
+        let successRate = Math.round(target.bombDisposal.win / all * 10000) / 100 + "%";
+        msg.reply(`\n> 柴猜數
+> ${codeArea}diff
+> +成功：${target.bombDisposal.win}場
+> -失敗：${target.bombDisposal.lose}場
+> 成功率：${successRate}${codeArea}`);
+      }
     }, {
       onlyOnce: true
     });
