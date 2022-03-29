@@ -36,6 +36,7 @@ async function db_set_data(path, data) {
 const angry = [];
 
 client.on('message', msg => {
+
   // 前置判斷
   try{
     if(!msg.guild) return; // 訊息不含有 guild 元素(來自私訊)，不回應
@@ -537,7 +538,7 @@ client.on('message', msg => {
       }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
-    } else {
+    } else if (msg.author.id !== DoUserID && DoingChannel === msg.channel.id) { // 同個頻道但是不是當前使用者
       recordInterruption(msg, `噓，<@${DoUserID}>現在正在經歷拆彈的緊張時刻呢`);
     }
   }
@@ -680,3 +681,21 @@ client.on('message', msg => {
 
 });
 
+//抓刪 刪除事件
+client.on('messageDelete', function (msg) {
+  if (!msg.guild) return; //只要是來自群組的訊息
+  let mStr = '';
+  try {
+    mStr = `
+＝＝＝＝＝＝＝＝刪除事件＝＝＝＝＝＝＝＝ \n
+發訊人：${msg.member.user.username}
+頻道：${msg.channel.name}
+刪除內容：${msg.content} \n
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ `
+
+    // client.channels.cache.get(msg.channel.id).send(mStr);
+    client.channels.cache.get("958259041182814268").send(mStr); // 刪除紀錄頻道
+  } catch (err) {
+    console.error("messageDeleteError", err);
+  }
+});
