@@ -36,7 +36,6 @@ async function db_set_data(path, data) {
 const angry = [];
 
 client.on('message', msg => {
-
   // 前置判斷
   try{
     if(!msg.guild) return; // 訊息不含有 guild 元素(來自私訊)，不回應
@@ -222,7 +221,8 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content); // 下班時間
-          msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
+          DoData.push(msg.author.username);
+          msg.channel.send(`申請資料如下：\n> 設定者  \n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
@@ -230,7 +230,15 @@ client.on('message', msg => {
             return onValue(ref(db, 'off-duty-time'), (snapshot) => {
               const offDutyList = snapshot.val();
               for (let i in offDutyList){
-                if (offDutyList[i].id === DoUserID) offDutyList[i].time = DoData[0];
+                if (offDutyList[i].id === DoUserID) {
+                  offDutyList[i].time = DoData[0];
+                } else {
+                  offDutyList.push({
+                    id: msg.author.id,
+                    time: DoData[0],
+                    username: DoData[1],
+                  })
+                }
               }
               // 執行寫入
               db_set_data('off-duty-time' ,offDutyList);
@@ -331,7 +339,7 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content)
-          msg.channel.send(`檢舉資料如下：\n > 設定者 <@${msg.author.id}>\n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
+          msg.channel.send(`檢舉資料如下：\n > 設定者  \n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
@@ -684,17 +692,19 @@ client.on('message', msg => {
 //抓刪 刪除事件
 client.on('messageDelete', function (msg) {
   if (!msg.guild) return; //只要是來自群組的訊息
-  let mStr = '';
+  if (msg.channel.id === "958259041182814268") return; // 不紀錄刪除頻道內的刪除事件
   try {
-    mStr = `
-＝＝＝＝＝＝＝＝刪除事件＝＝＝＝＝＝＝＝ \n
-發訊人：${msg.member.user.username}
-頻道：${msg.channel.name}
-刪除內容：${msg.content} \n
-＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ `
+    const avatarURL = "https://cdn.discordapp.com/avatars/" + msg.author.id + "/" + msg.author.avatar + ".jpeg" ;
+    const embed = new Discord.MessageEmbed()
+      .setColor('#ad0000')
+      .setTitle(`📝  <@${msg.author.id}> 執行了刪除事件`)
+      .setAuthor(`${msg.author.username}#${msg.author.discriminator}`, avatarURL, avatarURL)
+      .setThumbnail(avatarURL)
+      .addField('[刪除頻道]', '`' + msg.channel.name + '`', true)
+      .addField('[刪除內容]', msg.content)
+      .setTimestamp()
 
-    // client.channels.cache.get(msg.channel.id).send(mStr);
-    client.channels.cache.get("958259041182814268").send(mStr); // 刪除紀錄頻道
+    client.channels.cache.get("958259041182814268").send(embed); // 刪除紀錄頻道
   } catch (err) {
     console.error("messageDeleteError", err);
   }
