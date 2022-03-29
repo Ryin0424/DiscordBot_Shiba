@@ -686,7 +686,7 @@ client.on('message', msg => {
     })
   }
 
-  function catchError(error){
+  function catchError(description, error){
     try{
       return onValue(ref(db, 'error-log'), (snapshot) => {
         let log = snapshot.val();
@@ -694,6 +694,7 @@ client.on('message', msg => {
         if (log === null) log = [];
         log.push({
           time: date,
+          description: description,
           error: error
         });
         db_set_data('error-log', log);
