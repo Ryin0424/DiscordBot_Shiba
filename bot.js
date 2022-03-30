@@ -233,16 +233,15 @@ client.on('message', msg => {
             msg.channel.send('已確認，資料輸入中...');
             return onValue(ref(db, 'off-duty-time'), (snapshot) => {
               const offDutyList = snapshot.val();
-              for (let i in offDutyList){
-                if (offDutyList[i].id === DoUserID) {
-                  offDutyList[i].time = DoData[0];
-                } else {
-                  offDutyList.push({
-                    id: msg.author.id,
-                    time: DoData[0],
-                    username: DoData[1],
-                  })
-                }
+              let target = offDutyList.find(item => item.id === DoUserID)
+              if (target !== undefined){
+                target.time = DoData[0]; // call by references
+              } else {
+                offDutyList.push({
+                  id: msg.author.id,
+                  time: DoData[0],
+                  username: DoData[1],
+                })
               }
               // 執行寫入
               db_set_data('off-duty-time' ,offDutyList);
