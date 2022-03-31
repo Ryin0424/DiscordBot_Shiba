@@ -43,7 +43,8 @@ client.on('message', msg => {
     if(msg.member.user.bot) return; // 消息由機器人發送，不回應
   }
   catch(error){
-    console.error('前置判斷 Error',error);
+    console.error("前置判斷 Error", error);
+    catchError("前置判斷 Error", error);
     return;
   }
 
@@ -71,8 +72,9 @@ client.on('message', msg => {
               // 紀錄插話仔
               recordInterruption(msg, '有人正找我呢，你憋吵');
             }
-          } catch (err) {
-            console.error('社畜柴柴幫幫我(ShibaHlepMe) Error', err);
+          } catch (error) {
+            console.error("社畜柴柴幫幫我(ShibaHlepMe) Error", error);
+            catchError("社畜柴柴幫幫我(ShibaHlepMe) Error", error);
           }
           break;
       case '下班時間': // 查詢 距離下班剩餘時間
@@ -109,6 +111,10 @@ client.on('message', msg => {
           DoingChannel = msg.channel.id; // 確認目前作用頻道
           msg.channel.send(`${codeArea}密碼範圍：1 ~ 100 \n回答次數：5 次以內${codeArea}本柴已經決定好密碼了，來吧！\n\n如需變更範圍及次數，請輸入「變更規則」`);
           break;
+      case '柴成績':
+          msg.channel.send("正在取得個人成績紀錄...");
+          getMyAchievement(msg);
+          break;
       // default: //身份組ID
       //   CheckID(msg, cmd, CheckParty, msg.author.id);
       //   break;
@@ -117,8 +123,9 @@ client.on('message', msg => {
     // 支語警察
     chinaPolice(cmd);
 
-  } catch (err) {
-    console.error('輸入訊息(OnMessage) Error', err);
+  } catch (error) {
+    console.error("輸入訊息(OnMessage) Error", error);
+    catchError("輸入訊息(OnMessage) Error", error);
   }
 
   // 查詢下班時間
@@ -206,7 +213,8 @@ client.on('message', msg => {
       }
     }
     catch(error){
-      console.error('社畜柴柴幫幫我(At Shiba) Error', error);
+      console.error("社畜柴柴幫幫我(At Shiba) Error", error);
+      catchError("社畜柴柴幫幫我(At Shiba) Error", error);
     }
   }
 
@@ -217,15 +225,23 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content); // 下班時間
-          msg.channel.send(`申請資料如下：\n> 設定者 <@${msg.author.id}>\n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
+          DoData.push(msg.author.username);
+          msg.channel.send(`申請資料如下：\n> 設定者  \n> 下班時間 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
             msg.channel.send('已確認，資料輸入中...');
             return onValue(ref(db, 'off-duty-time'), (snapshot) => {
               const offDutyList = snapshot.val();
-              for (let i in offDutyList){
-                if (offDutyList[i].id === DoUserID) offDutyList[i].time = DoData[0];
+              let target = offDutyList.find(item => item.id === DoUserID)
+              if (target !== undefined){
+                target.time = DoData[0]; // call by references
+              } else {
+                offDutyList.push({
+                  id: msg.author.id,
+                  time: DoData[0],
+                  username: DoData[1],
+                })
               }
               // 執行寫入
               db_set_data('off-duty-time' ,offDutyList);
@@ -246,10 +262,11 @@ client.on('message', msg => {
           break;
       }
       if (DoUserID !== '') DoingCount++;
-    } catch (err) {
+    } catch (error) {
       CloseAllDoingFunction();
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.error('設定下班時間(setGetOffWorkTime) Error', err);
+      console.error("設定下班時間(setGetOffWorkTime) Error", error);
+      catchError("設定下班時間(setGetOffWorkTime) Error", error);
     }
   }
 
@@ -326,7 +343,7 @@ client.on('message', msg => {
         case 0:
           DoData = []
           DoData.push(msg.content)
-          msg.channel.send(`檢舉資料如下：\n > 設定者 <@${msg.author.id}>\n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
+          msg.channel.send(`檢舉資料如下：\n > 設定者  \n> 舉報詞彙 - **${DoData[0]}**\n\n正確 Y / 錯誤 N`);
           break;
         case 1:
           if (msg.content === 'Y' || msg.content === 'y') {
@@ -356,10 +373,11 @@ client.on('message', msg => {
           break;
       }
       if (DoUserID !== '') DoingCount++;
-    } catch (err) {
+    } catch (error) {
       CloseAllDoingFunction();
       client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-      console.error('支語舉報(reportChinaWord) Error', err);
+      console.error("支語舉報(reportChinaWord) Error", error);
+      catchError("支語舉報(reportChinaWord) Error", error);
     }
   }
 
@@ -427,10 +445,11 @@ client.on('message', msg => {
             break;
         }
         if (DoUserID !== '') DoingCount++;
-      } catch (err) {
+      } catch (error) {
         CloseAllDoingFunction();
         client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-        console.error('柴猜拳(doMora) Error', err);
+        console.error("柴猜拳(doMora) Error", error);
+        catchError("柴猜拳(doMora) Error", error);
       }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
@@ -487,7 +506,9 @@ client.on('message', msg => {
       } else {
         ultimatePasswordKey = getRangeRandom(PasswordMin + 1, PasswordMax - 1);
         doPassword(msg);
-        nowDoFunction = doPassword;
+        if (DoUserID !== '') {
+          nowDoFunction = doPassword;
+        }
       }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
@@ -514,22 +535,25 @@ client.on('message', msg => {
           PasswordMax = Number(msg.content) ;
           msg.channel.send(`${codeArea}密碼範圍：${PasswordMin} ~ ${PasswordMax}${codeArea} 剩餘次數：${AnswerLimited} 次`);
         } else if (Number(msg.content) === ultimatePasswordKey){
+          getAchievement(DoUserID, "柴猜數", 'win');
           CloseAllDoingFunction();
           AnswerLimited++;
           msg.reply(`恭喜拆彈成功！\nhttps://media.giphy.com/media/fxsqOYnIMEefC/giphy.gif`);
         }
         if (AnswerLimited <= 0) {
+          getAchievement(DoUserID, "柴猜數", 'lose');
           CloseAllDoingFunction();
           msg.reply(`砰！次數歸零，拆彈失敗\n正確密碼是：**${ultimatePasswordKey}**\nhttps://c.tenor.com/o7kwCN9_VjEAAAAC/explosion-boom.gif`);
         }
-      } catch (err) {
+      } catch (error) {
         CloseAllDoingFunction();
         client.channels.fetch(msg.channel.id).then(channel => channel.send('發生意外錯誤，中斷指令行為，請重新下達指令!'))
-        console.error('終極密碼(doPassword) Error', err);
+        console.error("終極密碼(doPassword) Error", error);
+        catchError("終極密碼(doPassword) Error", error);
       }
     } else if (DoingChannel !== msg.channel.id) {
       // do nothing
-    } else {
+    } else if (msg.author.id !== DoUserID && DoingChannel === msg.channel.id) { // 同個頻道但是不是當前使用者
       recordInterruption(msg, `噓，<@${DoUserID}>現在正在經歷拆彈的緊張時刻呢`);
     }
   }
@@ -578,6 +602,80 @@ client.on('message', msg => {
     });
   }
 
+  // 設定/取得人員成就資料
+  function getAchievement(authorId, game, result) {
+    return onValue(ref(db, 'achievement'), (snapshot) => {
+      let achievementData = snapshot.val();
+      if (achievementData === null) {
+        achievementData = []
+        let newMember = {
+          id: authorId,
+          bombDisposal: {
+            win: 0,
+            lose: 0
+          }
+        };
+        let newRecord = recordAchievement(newMember, game, result);
+        achievementData.push(newRecord);
+        db_set_data('achievement', achievementData);
+      } else {
+        let target = achievementData.find(member => member.id === authorId); // 尋找成就列表中有無資料
+        if (target === undefined) { // 尚未建立資料，設定之
+          let newMember = {
+            id: authorId,
+            bombDisposal: {
+              win: 0,
+              lose: 0
+            }
+          };
+          let newRecord = recordAchievement(newMember, game, result);
+          achievementData.push(newRecord);
+          db_set_data('achievement', achievementData);
+        } else {
+          target = recordAchievement(target, game, result);
+          db_set_data('achievement', achievementData);
+        }
+      }
+    }, {
+      onlyOnce: true
+    });
+  }
+
+  // 紀錄遊戲的成就分數
+  function recordAchievement(member, game, result) {
+    switch (game) {
+      case '柴猜數':
+        if (result === 'win') {
+          member.bombDisposal.win = member.bombDisposal.win + 1;
+        } else {
+          member.bombDisposal.lose = member.bombDisposal.lose + 1;
+        }
+        break;
+    }
+    return member;
+  }
+
+  // 取得個人成就成績
+  function getMyAchievement(msg) {
+    return onValue(ref(db, 'achievement'), (snapshot) => {
+      let achievementData = snapshot.val();
+      let target = achievementData.find(member => member.id === msg.author.id);
+      if (target === undefined) {
+        msg.channel.send("目前還沒有任何成績紀錄哦");
+      } else {
+        let all = target.bombDisposal.win + target.bombDisposal.lose;
+        let successRate = Math.round(target.bombDisposal.win / all * 10000) / 100 + "%";
+        msg.reply(`\n> 柴猜數
+> ${codeArea}diff
+> +成功：${target.bombDisposal.win}場
+> -失敗：${target.bombDisposal.lose}場
+> 成功率：${successRate}${codeArea}`);
+      }
+    }, {
+      onlyOnce: true
+    });
+  }
+
   // 確認權限
   // userRole 使用者擁有的身份組ID
   // targetRole 確認是否擁有的身份組ID
@@ -585,6 +683,26 @@ client.on('message', msg => {
     return userRole.some((el) => {
       return el === targetRole;
     })
+  }
+
+  function catchError(description, error){
+    try{
+      return onValue(ref(db, 'error-log'), (snapshot) => {
+        let log = snapshot.val();
+        getRightTime();
+        if (log === null) log = [];
+        log.push({
+          time: date,
+          description: description,
+          error: error
+        });
+        db_set_data('error-log', log);
+      }, {
+        onlyOnce: true
+      });
+    }catch(error){
+      console.error("媽的怎麼連你也可以出問題", error);
+    }
   }
 
   // 結束所有續行
@@ -598,3 +716,24 @@ client.on('message', msg => {
 
 });
 
+//抓刪 刪除事件
+client.on('messageDelete', function (msg) {
+  if (!msg.guild) return; //只要是來自群組的訊息
+  if (msg.channel.id === "958259041182814268") return; // 不紀錄刪除頻道內的刪除事件
+  try {
+    const avatarURL = "https://cdn.discordapp.com/avatars/" + msg.author.id + "/" + msg.author.avatar + ".jpeg" ;
+    const embed = new Discord.MessageEmbed()
+      .setColor('#ad0000')
+      .setTitle(`📝  <@${msg.author.id}> 執行了刪除事件`)
+      .setAuthor(`${msg.author.username}#${msg.author.discriminator}`, avatarURL, avatarURL)
+      .setThumbnail(avatarURL)
+      .addField('[刪除頻道]', '`' + msg.channel.name + '`', true)
+      .addField('[刪除內容]', msg.content)
+      .setTimestamp()
+
+    client.channels.cache.get("958259041182814268").send(embed); // 刪除紀錄頻道
+  } catch (error) {
+    // catchError("紀錄刪除（messageDelete） Error", error);
+    console.error("紀錄刪除（messageDelete） Error", error);
+  }
+});
