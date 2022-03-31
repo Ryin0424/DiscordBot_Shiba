@@ -31,11 +31,12 @@ A discord bot - using Node.js.
       - 有成績紀錄
       - 未來預期把這個功能弄得更完善一點
   - 被動功能
-    - 上面提過的支語警察
+    - 上面提過的支語警察 ~~搭配精美圖片~~
+    - ![支語警察](https://i.imgur.com/CdKyIYz.gif)
     - 紀錄頻道訊息刪除
       - ~~因為 MEE6 這個功能要付費，乾脆自幹一個~~
 
-![支語警察](https://i.imgur.com/CdKyIYz.gif)
+
 
 ---
 
@@ -74,7 +75,7 @@ A discord bot - using Node.js.
 
 - 不追蹤刪除紀錄的頻道
   - https://github.com/Ryin0424/discordBot_Shiba/blob/develop/bot.js#L722
-  - 此處的 channel.id 為筆者所在伺服器的頻道 id，如果也有不想要追蹤刪除紀錄的頻道，此處可以修改為自己的 channel.id
+  - 此處的 `channel.id` 為筆者所在伺服器的頻道 id，如果也有不想要追蹤刪除紀錄的頻道，此處可以修改為自己的 `channel.id`
   - ~~不改這邊也不會出什麼問題就是了~~
 
 ```js
